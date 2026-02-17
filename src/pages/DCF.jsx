@@ -1,7 +1,8 @@
 
-import React, { useEffect } from 'react';
+import React, { useState } from 'react';
 import { useDcfValuation } from '../hooks/useDcfValuation';
 import { formatCurrency, formatNumber, formatPercentage } from '../utils/formatters';
+import HelpModalDCF from '../components/HelpModalDCF'; // Use the new DCF-specific modal
 
 const DCF = () => {
   const {
@@ -14,6 +15,8 @@ const DCF = () => {
     calculateFairValue,
   } = useDcfValuation();
 
+  const [isHelpModalOpen, setHelpModalOpen] = useState(false);
+
   const handleTickerChange = (e) => {
     setTicker(e.target.value.toUpperCase());
   };
@@ -24,12 +27,15 @@ const DCF = () => {
 
   return (
     <div className="container dcf-view">
+      {/* Use the new HelpModalDCF component */}
+      {isHelpModalOpen && <HelpModalDCF onClose={() => setHelpModalOpen(false)} />}
+
       <div className="header-line">
         <h1>Discounted Cash Flow (DCF)</h1>
       </div>
 
       <div className="dcf-grid">
-        {/* Column 1: Data Entry */}
+        {/* ... Data Entry column remains the same ... */}
         <div className="data-entry-dcf card">
           <h2>Data Entry</h2>
           <div className="input-group-dcf">
@@ -39,10 +45,7 @@ const DCF = () => {
               <button onClick={handleFetchClick} disabled={loading} className="btn-fetch">Fetch</button>
             </div>
           </div>
-          
-          {/* --- CORRECTED Data Display --- */}
           <div className="input-group-dcf auto-field">
-            {/* THE FIX: Label changed to reflect the new data source (OCF) */}
             <label>Operating Cash Flow (OCF)</label>
             <span>{apiData ? formatCurrency(apiData.fcf) : 'N/A'}</span>
           </div>
@@ -72,9 +75,13 @@ const DCF = () => {
           </div>
         </div>
 
-        {/* Column 2: Assumptions */}
+        {/* Column 2: Assumptions with Help button*/}
         <div className="assumptions-dcf card">
-          <h2>Your Assumptions</h2>
+          <div className="assumptions-header">
+            <h2>Your Assumptions</h2>
+            <button className="help-button" onClick={() => setHelpModalOpen(true)}>?</button>
+          </div>
+
           <div className="input-group-dcf">
             <label>FCF Growth Rate (5y)</label>
             <div>
@@ -89,7 +96,6 @@ const DCF = () => {
               <span>%</span>
             </div>
           </div>
-          <div className="or-separator">OR calculate with CAPM</div>
           <div className="input-group-dcf auto-field">
             <label>Risk-Free Rate (Rf)</label>
             <span>{apiData ? formatPercentage(apiData.riskFreeRate) : 'N/A'}</span>
@@ -115,7 +121,6 @@ const DCF = () => {
         {loading ? 'Calculating...' : 'Calculate Fair Value'}
       </button>
 
-      {/* Results Section */}
       {result && (
         <div className="results-dcf card fade-in">
           <h2>Valuation Results</h2>

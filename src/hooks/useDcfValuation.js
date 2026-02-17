@@ -5,7 +5,8 @@ import { getTickerData, getTreasuryYield } from '../services/api';
 
 const DEFAULT_ASSUMPTIONS = {
   growthRate: 15,
-  discountRate: 10,
+  // discountRate is now calculated automatically
+  discountRate: 0, 
   terminalGrowth: 3,
   equityRiskPremium: 6,
 };
@@ -24,31 +25,21 @@ export const useDcfValuation = () => {
     const toastId = toast.loading(`Fetching data for ${tickerToFetch.toUpperCase()}...`);
 
     try {
-      // THE FIX IS HERE: Renamed `treasuryYieldData` to `treasuryYield` to reflect it's a number.
       const [tickerInfo, treasuryYield] = await Promise.all([
         getTickerData(tickerToFetch),
-        getTreasuryYield()
+        getTreasuryYield(),
       ]);
 
       const requiredData = {
-        fcf: tickerInfo.fcf,
+        fcf: tickerInfo.fcf, // This is OCF now
         capex: tickerInfo.capex,
-        fcfe: tickerInfo.fcfe,
+        fcfe: tickerInfo.fcfe, // The correctly calculated Levered FCF
         totalDebt: tickerInfo.totalDebt,
-        cash: tickerInfo.totalCash, 
+        cash: tickerInfo.totalCash,
         sharesOutstanding: tickerInfo.sharesOutstanding,
         beta: tickerInfo.beta,
-        // THE FIX IS HERE: Use the `treasuryYield` number directly, not `treasuryYield.yield`
         riskFreeRate: treasuryYield,
       };
-
-      for (const [key, value] of Object.entries(requiredData)) {
-        if (value === undefined || value === null) {
-          if (key !== 'capex') { // Capex can sometimes be missing/zero
-             throw new Error(`Missing required data point from API: ${key}`);
-          }
-        }
-      }
 
       setApiData(requiredData);
       toast.success(`Data loaded for ${tickerToFetch.toUpperCase()}`, { id: toastId });
@@ -62,22 +53,34 @@ export const useDcfValuation = () => {
     }
   }, []);
 
+  // --- NEW: Automatically calculate Discount Rate using CAPM ---
+  useEffect(() => {
+    if (apiData) {
+      const { riskFreeRate, beta } = apiData;
+      const erp = assumptions.equityRiskPremium / 100;
+      const discountRate = (riskFreeRate + beta * erp) * 100;
+      
+      // Update the discount rate in assumptions, rounding for a cleaner display
+      updateAssumption('discountRate', discountRate.toFixed(2));
+    }
+  }, [apiData, assumptions.equityRiskPremium]); // Recalculate if ERP changes
+
+
   const updateAssumption = (field, value) => {
     setAssumptions(prev => ({ ...prev, [field]: parseFloat(value) || 0 }));
   };
 
   const calculateFairValue = () => {
     if (!apiData) {
-      toast.error("No financial data available. Please fetch data for a ticker first.");
+      toast.error("No financial data available.");
       return;
     }
 
     const fcfe0 = apiData.fcfe;
     const g = assumptions.growthRate / 100;
     const gt = assumptions.terminalGrowth / 100;
-    const r_input = assumptions.discountRate / 100;
-    const erp = assumptions.equityRiskPremium / 100;
-    const r = r_input > 0 ? r_input : apiData.riskFreeRate + apiData.beta * erp;
+    // THE CHANGE: 'r' is now taken directly from assumptions, which is auto-calculated
+    const r = assumptions.discountRate / 100;
 
     if (r <= gt) {
       toast.error("Discount Rate must be greater than Terminal Growth Rate.");
@@ -111,16 +114,10 @@ export const useDcfValuation = () => {
   
   useEffect(() => {
     fetchTickerData(ticker);
-  }, [fetchTickerData]);
-
+  }, []); // Only run on initial load
 
   return {
-    ticker, setTicker,
-    apiData,
-    assumptions, updateAssumption,
-    result,
-    loading,
-    fetchTickerData,
-    calculateFairValue,
+    ticker, setTicker, apiData, assumptions, updateAssumption,
+    result, loading, fetchTickerData, calculateFairValue,
   };
 };

@@ -1,10 +1,12 @@
+
 import React from 'react';
+import '../styles/HelpModal.css';
 
 const HelpModal = ({ onClose }) => {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose}>&times;</button>
+        <button className="close-button" onClick={onClose}>&times;</button>
         <h2>How It Works</h2>
         <p>This tool uses the Exit Multiple Method to project future market capitalization and determine the expected Compound Annual Growth Rate (CAGR) on different growth scenarios.</p>
         <ol>

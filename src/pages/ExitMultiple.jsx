@@ -22,8 +22,8 @@ const ExitMultiple = () => {
         <button className="help-button" onClick={() => setShowHelp(true)}>?</button>
       </div>
       
-      {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
 
+      {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
       <DataEntry 
         data={dataEntry} 
         onChange={updateDataEntry} 
