@@ -3,12 +3,12 @@ import DataEntry from '../components/DataEntry';
 import ScenarioSection from '../components/ScenarioSection';
 import ResultsGrid from '../components/ResultsGrid';
 import GrowthChart from '../components/GrowthChart';
-import HelpModal from '../components/HelpModal'; // Import the modal
+import HelpModal from '../components/HelpModal';
 import { useValuation } from '../hooks/useValuation';
 import logo from '../assets/mba_logo.png';
 
-const Home = () => {
-  const [showHelp, setShowHelp] = useState(false); // State to control modal visibility
+const ExitMultiple = () => {
+  const [showHelp, setShowHelp] = useState(false);
   const { 
     dataEntry, scenarios, analysis, 
     updateDataEntry, updateScenario, fetchTicker, calculate 
@@ -22,7 +22,7 @@ const Home = () => {
         <button className="help-button" onClick={() => setShowHelp(true)}>?</button>
       </div>
       
-      {showHelp && <HelpModal onClose={() => setShowHelp(false)} />} {/* Render modal conditionally */}
+      {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
 
       <DataEntry 
         data={dataEntry} 
@@ -49,4 +49,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default ExitMultiple;

@@ -64,9 +64,6 @@ body {
   right: 10px;
 }
 
-
-
-
 .help-button:hover, .modal-close:hover {
   color: black;
   box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
@@ -299,4 +296,124 @@ label {
 
 .app-footer a:hover {
   text-decoration: underline;
+}
+
+/* Navbar Styles */
+.navbar {
+  display: flex;
+  justify-content: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--primary-green);
+}
+
+.nav-link {
+  color: var(--text-main);
+  text-decoration: none;
+  margin: 0 1.5rem;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  border-radius: 6px;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.nav-link.active {
+  background-color: var(--primary-green);
+  color: #000;
+}
+
+/* DCF View Specific Styles */
+.dcf-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  width: 100%;
+  margin: 1.5rem 0;
+}
+
+.data-entry-dcf, .assumptions-dcf, .results-dcf {
+  display: flex;
+  flex-direction: column;
+}
+
+.input-group-dcf {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  width: 100%;
+}
+
+.input-group-dcf label {
+  font-weight: 500;
+  flex-basis: 50%;
+}
+
+.input-group-dcf input, .input-group-dcf span {
+  flex-basis: 45%;
+  text-align: right;
+}
+
+.input-group-dcf input {
+  width: 60px; /* Adjust width as needed */
+}
+
+.auto-field span, .default-field input {
+  color: #a0a0a0; /* Grey color for non-editable/default fields */
+}
+
+.or-separator {
+  text-align: center;
+  color: var(--primary-green);
+  margin: 1rem 0;
+  font-weight: bold;
+}
+
+.results-dcf {
+  width: 100%;
+  text-align: center;
+}
+
+.result-item h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.highlight-result {
+  font-size: 2.5rem;
+  color: var(--primary-green);
+  font-weight: bold;
+  margin: 0.5rem 0;
+}
+
+.result-details {
+  margin-top: 1rem;
+  color: #c0c0c0;
+}
+
+@media (max-width: 900px) {
+  .dcf-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.btn-fetch {
+  background: #444;
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: 1px solid #555;
+  cursor: pointer;
+  margin-left: 8px;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+}
+
+.btn-fetch:hover {
+  background: #555;
+}
+
+.btn-fetch:disabled {
+  background: #333;
+  color: #666;
+  cursor: not-allowed;
 }
