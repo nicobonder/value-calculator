@@ -32,7 +32,8 @@ const HelpModalDCF = ({ onClose }) => {
               <strong>FCF Growth Rate (5y):</strong> Your most subjective and impactful input. Research the company's historical growth, analyst estimates, and industry trends.
               <ul>
                 <li><em>Mature, stable companies:</em> 5-10%</li>
-                <li><em>High-growth companies:</em> 15-25% (use with caution)</li>
+                <li><em>Growth companies:</em> 15-25%</li>
+                <li>For big tech companies, with high expecting growth, you can use the <strong>P/FCF</strong> (use carefully)</li>
               </ul>
             </li>
             <li>
@@ -46,7 +47,13 @@ const HelpModalDCF = ({ onClose }) => {
             </li>
           </ul>
         </div>
+        <div className='disclaimer'>
+          <h3>Disclaimer</h3>
+          <p>The information provided by this tool is for educational purposes only and does not constitute financial or investment advice. Always perform your own due diligence before making any investment decisions.</p>
+        </div>
       </div>
+     
+      
     </div>
   );
 };

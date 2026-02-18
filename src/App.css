@@ -26,6 +26,51 @@ body {
   padding-bottom: 5vh; /* Space for the footer */
 }
 
+/* === Updated Navbar Styles === */
+.navbar-container {
+  position: relative; /* Context for the absolute positioned logo */
+  display: flex;
+  justify-content: center; /* Center the main navbar menu */
+  align-items: center;
+  border-bottom: 1px solid var(--primary-green); /* The bottom border now spans the full width */
+}
+
+.logo-container {
+  position: absolute; /* Takes the logo out of the normal flow */
+  /* Aligns the logo with the start of the main content (100% width - 80% content width = 20% / 2 sides) */
+  left: 10%;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  height: 100px; /* Assuming this is the desired height */
+}
+
+.logo {
+  width: 100px; height: 100px;
+}
+
+.navbar { 
+  display: flex; 
+  justify-content: center; 
+  padding: 1rem 0; 
+}
+
+.nav-link { 
+  color: var(--text-main); 
+  text-decoration: none; 
+  margin: 0 1.5rem; 
+  padding: 0.5rem 1rem; 
+  font-weight: 500; 
+  border-radius: 6px; 
+  transition: background-color 0.3s, color 0.3s; 
+}
+
+.nav-link.active { 
+  background-color: var(--primary-green); 
+  color: #000; 
+}
+
 /* General App Layout */
 .app-wrapper { display: flex; flex-direction: column; min-height: 100vh; }
 .container { width: 80%; display: flex; flex-direction: column; align-items: center; margin: 0 auto; max-width: 1200px; padding: 0.75rem 0; text-align: center; flex-grow: 1; }
@@ -35,7 +80,6 @@ h2 { margin: 0.5rem 0; }
 
 /* Header */
 .header-line { display: flex; flex-direction: row; align-items: center; justify-content: space-between; width: 80%; margin: 0 auto; }
-.header-line img { width: 100px; height: 100px; }
 
 /* Main Content & Grids */
 .data-entry, .scenarios-grid, .results-grid { width: 85%; }
@@ -52,9 +96,32 @@ label { width: 75%; margin-right: 0.5rem; text-align: left; }
 /* Buttons */
 .btn-calculate { background: var(--primary-green); color: #000; padding: 14px 40px; border-radius: 6px; font-weight: 800; border: none; cursor: pointer; transition: all 0.3s ease; margin: 20px 0; }
 .btn-calculate:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4); }
-.btn-fetch { background: #444; color: #fff; padding: 6px 12px; border-radius: 4px; border: 1px solid #555; cursor: pointer; margin-left: 8px; font-size: 0.9rem; transition: background-color 0.2s; }
-.btn-fetch:hover { background: #555; }
-.btn-fetch:disabled { background: #333; color: #666; cursor: not-allowed; }
+
+.btn-fetch {
+  background-color: var(--primary-green);
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: 2px solid transparent; /* Reserve space for border */
+  cursor: pointer;
+  margin-left: 0.5rem;
+  font-size: 0.9rem;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s; /* Add transition for border */
+  box-sizing: border-box;
+}
+
+.btn-fetch:hover {
+  background-color: var(--bg-dark);
+  color: var(--primary-green);
+  border-color: var(--primary-green); /* Only change color on hover */
+}
+
+.btn-fetch:disabled { 
+  background: #333; 
+  color: #666; 
+  cursor: not-allowed; 
+  border-color: #333; /* Ensure disabled border is consistent */
+}
 
 /* --- STYLES FOR ASSUMPTIONS HEADER AND HELP BUTTON --- */
 .assumptions-header {
@@ -62,7 +129,6 @@ label { width: 75%; margin-right: 0.5rem; text-align: left; }
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  /* No margin-bottom here, h2 will provide it */
 }
 
 .assumptions-header h2 {
@@ -70,7 +136,7 @@ label { width: 75%; margin-right: 0.5rem; text-align: left; }
 }
 
 .help-button {
-  background-color: #4a4a4d;
+  background-color: var(--primary-green);
   color: #f0f0f0;
   border: 1px solid #666;
   border-radius: 50%;
@@ -83,24 +149,55 @@ label { width: 75%; margin-right: 0.5rem; text-align: left; }
   justify-content: center;
   align-items: center;
   transition: background-color 0.2s, color 0.2s;
-  margin-bottom: 1rem; /* Align with h2 margin */
+  margin-bottom:1rem; /* Align with h2 margin */
 }
 
-.help-button:hover {
-  background-color: #5a5a5d;
-  color: #fff;
+.help-button:hover  {
+  background-color: var(--bg-dark);
+  color: var(--primary-green);
+  font-weight: 600;
 }
 
 /* DCF View Specific Styles */
 .dcf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; width: 100%; margin: 1.5rem 0; }
-.data-entry-dcf, .assumptions-dcf, .results-dcf { display: flex; flex-direction: column; }
+.results-dcf { display: flex; flex-direction: column; }
 .input-group-dcf { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; width: 100%; }
 .input-group-dcf label { font-weight: 500; flex-basis: 50%; }
 .input-group-dcf input, .input-group-dcf span { flex-basis: 45%; text-align: right; }
-.input-group-dcf input { width: 60px; }
+.input-group-dcf input { 
+  width: 60px;
+  text-align: left;
+  padding: 0.2rem;
+}
+.input-group-dcf input::placeholder {
+  text-align: left;
+  padding: 0.2rem;
+}
+
 .auto-field span { color: #a0a0a0; }
 .highlight { color: var(--primary-green); font-weight: 700; }
 .highlight-result { font-size: 2.5rem; color: var(--primary-green); font-weight: bold; margin: 0.5rem 0; }
+
+.assumptions-dcf, .data-entry-dcf {
+  display: flex; 
+  flex-direction: column;
+  padding: 0.5rem; 
+}
+
+.disclaimer {
+  margin-top: 1rem;
+}
+
+.disclaimer h3 {
+  color: var(--primary-green);
+  font-size: 1rem;
+}
+
+.disclaimer p {
+  font-size: 0.8rem;
+  text-align: left;
+}
+
 
 /* Results */
 .results-section, .results-dcf { width: 100%; text-align: center; }
@@ -116,11 +213,6 @@ label { width: 75%; margin-right: 0.5rem; text-align: left; }
 .app-footer p { margin: 0; font-size: 1rem; color: #000; font-weight: 500; }
 .app-footer a { color: #fff; font-weight: bold; text-decoration: none; transition: text-decoration 0.2s; margin-left: 0.5rem; }
 .app-footer a:hover { text-decoration: underline; }
-
-/* Navbar */
-.navbar { display: flex; justify-content: center; padding: 1rem 0; border-bottom: 1px solid var(--primary-green); }
-.nav-link { color: var(--text-main); text-decoration: none; margin: 0 1.5rem; padding: 0.5rem 1rem; font-weight: 500; border-radius: 6px; transition: background-color 0.3s, color 0.3s; }
-.nav-link.active { background-color: var(--primary-green); color: #000; }
 
 /* Responsive */
 @media (max-width: 900px) { .dcf-grid { grid-template-columns: 1fr; } }

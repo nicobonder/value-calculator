@@ -2,12 +2,12 @@
 import React, { useState } from 'react';
 import { useDcfValuation } from '../hooks/useDcfValuation';
 import { formatCurrency, formatNumber, formatPercentage } from '../utils/formatters';
-import HelpModalDCF from '../components/HelpModalDCF'; // Use the new DCF-specific modal
+import HelpModalDCF from '../components/HelpModalDCF';
 
 const DCF = () => {
   const {
     ticker, setTicker,
-    apiData,
+    apiData, updateApiData, // Import updateApiData
     assumptions, updateAssumption,
     result,
     loading,
@@ -25,9 +25,22 @@ const DCF = () => {
     fetchTickerData(ticker);
   };
 
+  // Helper to render an input for financial data
+  const renderDataInput = (field, label) => (
+    <div className="input-group-dcf">
+      <label>{label}</label>
+      <input
+        type="number"
+        value={apiData && apiData[field] !== null ? apiData[field] : ''}
+        onChange={(e) => updateApiData(field, e.target.value)}
+        disabled={!apiData}
+        className={field === 'fcfe' ? 'highlight' : ''}
+      />
+    </div>
+  );
+
   return (
     <div className="container dcf-view">
-      {/* Use the new HelpModalDCF component */}
       {isHelpModalOpen && <HelpModalDCF onClose={() => setHelpModalOpen(false)} />}
 
       <div className="header-line">
@@ -35,47 +48,32 @@ const DCF = () => {
       </div>
 
       <div className="dcf-grid">
-        {/* ... Data Entry column remains the same ... */}
         <div className="data-entry-dcf card">
           <h2>Data Entry</h2>
           <div className="input-group-dcf">
             <label>Ticker</label>
             <div style={{ display: 'flex', alignItems: 'center' }}>
-              <input type="text" value={ticker} onChange={handleTickerChange} style={{ width: '80px'}} />
+              <input 
+                type="text" 
+                value={ticker} 
+                onChange={handleTickerChange}
+                placeholder="e.g. WMT"
+                style={{ width: '100px'}}
+              />
               <button onClick={handleFetchClick} disabled={loading} className="btn-fetch">Fetch</button>
             </div>
           </div>
-          <div className="input-group-dcf auto-field">
-            <label>Operating Cash Flow (OCF)</label>
-            <span>{apiData ? formatCurrency(apiData.fcf) : 'N/A'}</span>
-          </div>
-          <div className="input-group-dcf auto-field">
-            <label>Capital Expenditure</label>
-            <span>{apiData ? formatCurrency(apiData.capex) : 'N/A'}</span>
-          </div>
-          <div className="input-group-dcf auto-field">
-            <label>Levered FCF (for DCF)</label>
-            <span className="highlight">{apiData ? formatCurrency(apiData.fcfe) : 'N/A'}</span>
-          </div>
-          <div className="input-group-dcf auto-field">
-            <label>Total Debt</label>
-            <span>{apiData ? formatCurrency(apiData.totalDebt) : 'N/A'}</span>
-          </div>
-          <div className="input-group-dcf auto-field">
-            <label>Cash & Equivalents</label>
-            <span>{apiData ? formatCurrency(apiData.cash) : 'N/A'}</span>
-          </div>
-          <div className="input-group-dcf auto-field">
-            <label>Shares Outstanding</label>
-            <span>{apiData ? formatNumber(apiData.sharesOutstanding) : 'N/A'}</span>
-          </div>
-          <div className="input-group-dcf auto-field">
-            <label>Beta</label>
-            <span>{apiData ? apiData.beta.toFixed(2) : 'N/A'}</span>
-          </div>
+          
+          {/* Render editable inputs for financial data */}
+          {renderDataInput('fcf', 'Operating Cash Flow (OCF)')}
+          {renderDataInput('capex', 'Capital Expenditure')}
+          {renderDataInput('fcfe', 'Levered FCF (for DCF)')}
+          {renderDataInput('totalDebt', 'Total Debt')}
+          {renderDataInput('cash', 'Cash & Equivalents')}
+          {renderDataInput('sharesOutstanding', 'Shares Outstanding')}
+          {renderDataInput('beta', 'Beta')}
         </div>
 
-        {/* Column 2: Assumptions with Help button*/}
         <div className="assumptions-dcf card">
           <div className="assumptions-header">
             <h2>Your Assumptions</h2>
@@ -98,6 +96,7 @@ const DCF = () => {
           </div>
           <div className="input-group-dcf auto-field">
             <label>Risk-Free Rate (Rf)</label>
+            {/* This remains a span as it's from an external, non-editable source */}
             <span>{apiData ? formatPercentage(apiData.riskFreeRate) : 'N/A'}</span>
           </div>
           <div className="input-group-dcf">

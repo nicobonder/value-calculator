@@ -5,7 +5,6 @@ import ResultsGrid from '../components/ResultsGrid';
 import GrowthChart from '../components/GrowthChart';
 import HelpModal from '../components/HelpModal';
 import { useValuation } from '../hooks/useValuation';
-import logo from '../assets/mba_logo.png';
 
 const ExitMultiple = () => {
   const [showHelp, setShowHelp] = useState(false);
@@ -17,7 +16,6 @@ const ExitMultiple = () => {
   return (
     <main className="container">
       <div className='header-line'>
-        <img src={logo} alt='logo' />
         <h1>Possible Future Value</h1>
         <button className="help-button" onClick={() => setShowHelp(true)}>?</button>
       </div>

@@ -5,23 +5,26 @@ import { getTickerData, getTreasuryYield } from '../services/api';
 
 const DEFAULT_ASSUMPTIONS = {
   growthRate: 15,
-  // discountRate is now calculated automatically
   discountRate: 0, 
   terminalGrowth: 3,
   equityRiskPremium: 6,
 };
 
 export const useDcfValuation = () => {
-  const [ticker, setTicker] = useState('AAPL');
+  const [ticker, setTicker] = useState('');
   const [apiData, setApiData] = useState(null);
   const [assumptions, setAssumptions] = useState(DEFAULT_ASSUMPTIONS);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const fetchTickerData = useCallback(async (tickerToFetch) => {
-    if (!tickerToFetch) return;
+    if (!tickerToFetch) {
+      toast.error("Please enter a ticker first.");
+      return;
+    }
     setLoading(true);
     setResult(null);
+    setApiData(null);
     const toastId = toast.loading(`Fetching data for ${tickerToFetch.toUpperCase()}...`);
 
     try {
@@ -31,12 +34,12 @@ export const useDcfValuation = () => {
       ]);
 
       const requiredData = {
-        fcf: tickerInfo.fcf, // This is OCF now
+        fcf: tickerInfo.fcf, // Note: This is labeled as OCF in the UI
         capex: tickerInfo.capex,
-        fcfe: tickerInfo.fcfe, // The correctly calculated Levered FCF
+        fcfe: tickerInfo.fcfe,
         totalDebt: tickerInfo.totalDebt,
         cash: tickerInfo.totalCash,
-        sharesOutstanding: tickerInfo.sharesOutstanding,
+        sharesOutstanding: tickerInfo.sharesOutstanding, // User pointed out this needs correction
         beta: tickerInfo.beta,
         riskFreeRate: treasuryYield,
       };
@@ -53,18 +56,19 @@ export const useDcfValuation = () => {
     }
   }, []);
 
-  // --- NEW: Automatically calculate Discount Rate using CAPM ---
   useEffect(() => {
     if (apiData) {
       const { riskFreeRate, beta } = apiData;
       const erp = assumptions.equityRiskPremium / 100;
       const discountRate = (riskFreeRate + beta * erp) * 100;
-      
-      // Update the discount rate in assumptions, rounding for a cleaner display
       updateAssumption('discountRate', discountRate.toFixed(2));
     }
-  }, [apiData, assumptions.equityRiskPremium]); // Recalculate if ERP changes
+  }, [apiData, assumptions.equityRiskPremium]);
 
+  // Function to update fetched financial data
+  const updateApiData = (field, value) => {
+    setApiData(prev => ({ ...prev, [field]: parseFloat(value) || 0 }));
+  };
 
   const updateAssumption = (field, value) => {
     setAssumptions(prev => ({ ...prev, [field]: parseFloat(value) || 0 }));
@@ -72,14 +76,13 @@ export const useDcfValuation = () => {
 
   const calculateFairValue = () => {
     if (!apiData) {
-      toast.error("No financial data available.");
+      toast.error("No financial data available. Please fetch data first.");
       return;
     }
 
     const fcfe0 = apiData.fcfe;
     const g = assumptions.growthRate / 100;
     const gt = assumptions.terminalGrowth / 100;
-    // THE CHANGE: 'r' is now taken directly from assumptions, which is auto-calculated
     const r = assumptions.discountRate / 100;
 
     if (r <= gt) {
@@ -111,13 +114,11 @@ export const useDcfValuation = () => {
     });
     toast.success("Calculation complete!");
   };
-  
-  useEffect(() => {
-    fetchTickerData(ticker);
-  }, []); // Only run on initial load
 
   return {
-    ticker, setTicker, apiData, assumptions, updateAssumption,
+    ticker, setTicker,
+    apiData, updateApiData, // Export the new function
+    assumptions, updateAssumption,
     result, loading, fetchTickerData, calculateFairValue,
   };
 };

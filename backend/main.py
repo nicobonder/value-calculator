@@ -1,4 +1,3 @@
-
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import yfinance as yf
@@ -22,7 +21,6 @@ app.add_middleware(
 def process_stock_data(stock: yf.Ticker, ticker: str) -> dict:
     try:
         info = stock.info
-        # cashflow_df = stock.cashflow
         cashflow_df = stock.quarterly_cashflow
 
         ocf = 0.0
@@ -30,41 +28,46 @@ def process_stock_data(stock: yf.Ticker, ticker: str) -> dict:
         fcfe = 0.0
 
         if not cashflow_df.empty:
-            # THE FIX: 'fcf' field will now be Operating Cash Flow (OCF) to serve as the baseline.
             try:
-                #ocf_val = cashflow_df.loc['Operating Cash Flow'].iloc[0]
-                ocf_val = cashflow_df.loc['Operating Cash Flow'].iloc[:4].sum()  # <-- TTM FIX
+                ocf_val = cashflow_df.loc['Operating Cash Flow'].iloc[:4].sum()
                 if not pd.isnull(ocf_val):
                     ocf = float(ocf_val)
             except (KeyError, IndexError):
-                pass # ocf remains 0.0
+                pass 
 
-            # Capital Expenditure remains the same.
             try:
-                # capex_val = cashflow_df.loc['Capital Expenditure'].iloc[0]
-                capex_val = cashflow_df.loc['Capital Expenditure'].iloc[:4].sum()  # <-- TTM FIX
+                capex_val = cashflow_df.loc['Capital Expenditure'].iloc[:4].sum()
                 if not pd.isnull(capex_val):
                     capex = float(capex_val)
             except (KeyError, IndexError):
-                pass # capex remains 0.0
+                pass 
 
-            # FCFE is calculated from the baseline OCF and Capex.
-            # This makes the relationship between the fields clear.
             if ocf != 0.0 and capex != 0.0:
-                fcfe = ocf + capex # Capex is negative, so adding it is correct.
+                fcfe = ocf + capex
+
+        # --- FIX: Calculate Implied Shares Outstanding ---
+        market_cap = info.get("marketCap")
+        current_price = info.get("regularMarketPrice") or info.get("currentPrice")
+
+        implied_shares = 0
+        if market_cap and current_price and current_price > 0:
+            implied_shares = market_cap / current_price
+        else:
+            # Fallback to the direct value if calculation isn't possible
+            implied_shares = info.get("sharesOutstanding")
+        # --- END FIX ---
 
         processed_data = {
             "name": info.get("longName"),
             "ticker": ticker,
             "revenue": info.get("totalRevenue"),
-            "marketCap": info.get("marketCap"),
-            # Rename `fcf` to `ocf` internally for clarity, but the frontend will receive it as `fcf`.
+            "marketCap": market_cap,
             "fcf": ocf,
             "capex": capex,
             "fcfe": fcfe,
             "totalDebt": info.get("totalDebt"),
             "totalCash": info.get("totalCash"),
-            "sharesOutstanding": info.get("sharesOutstanding"),
+            "sharesOutstanding": implied_shares, # Use the corrected shares value
             "beta": info.get("beta"),
         }
 
@@ -82,7 +85,6 @@ def process_stock_data(stock: yf.Ticker, ticker: str) -> dict:
 @app.get("/api/stock/{ticker}")
 def get_stock_data(ticker: str):
     ticker_upper = ticker.upper()
-    # Cache is being re-enabled for stock data, assuming previous issues are resolved by the logic fix.
     if ticker_upper in CACHE and (time.time() - CACHE[ticker_upper]["timestamp"] < CACHE_DURATION_SECONDS):
         return CACHE[ticker_upper]["data"]
     try:
