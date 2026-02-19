@@ -33,16 +33,16 @@ export const useDcfValuation = () => {
         getTreasuryYield(),
       ]);
 
+      // --- FIX: Simplify data structure and use correct fields ---
       const requiredData = {
-        fcf: tickerInfo.fcf, // Note: This is labeled as OCF in the UI
-        capex: tickerInfo.capex,
-        fcfe: tickerInfo.fcfe,
+        fcf: tickerInfo.fcf, 
         totalDebt: tickerInfo.totalDebt,
         cash: tickerInfo.totalCash,
-        sharesOutstanding: tickerInfo.sharesOutstanding, // User pointed out this needs correction
+        sharesOutstanding: tickerInfo.sharesOutstanding,
         beta: tickerInfo.beta,
         riskFreeRate: treasuryYield,
       };
+      // --- END FIX ---
 
       setApiData(requiredData);
       toast.success(`Data loaded for ${tickerToFetch.toUpperCase()}`, { id: toastId });
@@ -65,7 +65,6 @@ export const useDcfValuation = () => {
     }
   }, [apiData, assumptions.equityRiskPremium]);
 
-  // Function to update fetched financial data
   const updateApiData = (field, value) => {
     setApiData(prev => ({ ...prev, [field]: parseFloat(value) || 0 }));
   };
@@ -80,7 +79,9 @@ export const useDcfValuation = () => {
       return;
     }
 
-    const fcfe0 = apiData.fcfe;
+    // --- FIX: Use apiData.fcf as the starting point for the calculation ---
+    const fcfe0 = apiData.fcf;
+    // --- END FIX ---
     const g = assumptions.growthRate / 100;
     const gt = assumptions.terminalGrowth / 100;
     const r = assumptions.discountRate / 100;
@@ -117,7 +118,7 @@ export const useDcfValuation = () => {
 
   return {
     ticker, setTicker,
-    apiData, updateApiData, // Export the new function
+    apiData, updateApiData,
     assumptions, updateAssumption,
     result, loading, fetchTickerData, calculateFairValue,
   };

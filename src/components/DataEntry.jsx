@@ -25,7 +25,7 @@ const DataEntry = ({ data, onChange, onBlur }) => {
     { name: 'ticker', label: 'Ticker', type: 'text' },
     { name: 'marketCap', label: 'Market Cap', type: 'number', isCurrency: true },
     { name: 'revenue', label: 'Revenue', type: 'number', isCurrency: true },
-    { name: 'fcf', label: 'Current FCF', type: 'number', isCurrency: true },
+    { name: 'fcf', label: 'Free Cash Flow (ttm)', type: 'number', isCurrency: true },
     { name: 'horizon', label: 'Horizon (Years)', type: 'number' },
   ];
 

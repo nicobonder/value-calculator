@@ -1,13 +1,13 @@
 
 import React, { useState } from 'react';
 import { useDcfValuation } from '../hooks/useDcfValuation';
-import { formatCurrency, formatNumber, formatPercentage } from '../utils/formatters';
+import { formatCurrency, formatPercentage } from '../utils/formatters';
 import HelpModalDCF from '../components/HelpModalDCF';
 
 const DCF = () => {
   const {
     ticker, setTicker,
-    apiData, updateApiData, // Import updateApiData
+    apiData, updateApiData,
     assumptions, updateAssumption,
     result,
     loading,
@@ -25,19 +25,50 @@ const DCF = () => {
     fetchTickerData(ticker);
   };
 
-  // Helper to render an input for financial data
-  const renderDataInput = (field, label) => (
-    <div className="input-group-dcf">
-      <label>{label}</label>
-      <input
-        type="number"
-        value={apiData && apiData[field] !== null ? apiData[field] : ''}
-        onChange={(e) => updateApiData(field, e.target.value)}
-        disabled={!apiData}
-        className={field === 'fcfe' ? 'highlight' : ''}
-      />
-    </div>
-  );
+  // --- NEW: Input Formatting Logic ---
+  const handleFormattedInputChange = (field, value) => {
+    const cleanedValue = value.replace(/[,]/g, '');
+    const numericValue = cleanedValue === '' ? '' : parseFloat(cleanedValue);
+    
+    if (!isNaN(numericValue) || numericValue === '') {
+      updateApiData(field, numericValue);
+    }
+  };
+  
+  const getDisplayValue = (field, rawValue) => {
+    if (rawValue === null || rawValue === undefined || rawValue === '') {
+      return '';
+    }
+    
+    switch(field) {
+      case 'fcf':
+      case 'totalDebt':
+      case 'cash':
+      case 'sharesOutstanding':
+        return new Intl.NumberFormat('en-US').format(Math.trunc(rawValue));
+      case 'beta':
+        return rawValue;
+      default:
+        return rawValue;
+    }
+  };
+  // --- END NEW ---
+
+  const renderDataInput = (field, label) => {
+    const value = apiData && apiData[field] !== null ? apiData[field] : '';
+    
+    return (
+      <div className="input-group-dcf" key={field}>
+        <label>{label}</label>
+        <input
+          type="text"
+          value={getDisplayValue(field, value)}
+          onChange={(e) => handleFormattedInputChange(field, e.target.value)}
+          disabled={!apiData}
+        />
+      </div>
+    );
+  };
 
   return (
     <div className="container dcf-view">
@@ -49,9 +80,9 @@ const DCF = () => {
 
       <div className="dcf-grid">
         <div className="data-entry-dcf card">
-          <h2>Data Entry</h2>
+          <h2>Key Data</h2>
           <div className="input-group-dcf">
-            <label>Ticker</label>
+            <label><strong>Ticker</strong></label>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <input 
                 type="text" 
@@ -64,14 +95,15 @@ const DCF = () => {
             </div>
           </div>
           
-          {/* Render editable inputs for financial data */}
-          {renderDataInput('fcf', 'Operating Cash Flow (OCF)')}
-          {renderDataInput('capex', 'Capital Expenditure')}
-          {renderDataInput('fcfe', 'Levered FCF (for DCF)')}
-          {renderDataInput('totalDebt', 'Total Debt')}
-          {renderDataInput('cash', 'Cash & Equivalents')}
-          {renderDataInput('sharesOutstanding', 'Shares Outstanding')}
-          {renderDataInput('beta', 'Beta')}
+          {apiData && (
+            <>
+              {renderDataInput('fcf', 'Free Cash Flow (TTM)')}
+              {renderDataInput('totalDebt', 'Total Debt')}
+              {renderDataInput('cash', 'Cash & Equivalents')}
+              {renderDataInput('sharesOutstanding', 'Shares Outstanding')}
+              {renderDataInput('beta', 'Beta')}
+            </>
+          )}
         </div>
 
         <div className="assumptions-dcf card">
@@ -96,7 +128,6 @@ const DCF = () => {
           </div>
           <div className="input-group-dcf auto-field">
             <label>Risk-Free Rate (Rf)</label>
-            {/* This remains a span as it's from an external, non-editable source */}
             <span>{apiData ? formatPercentage(apiData.riskFreeRate) : 'N/A'}</span>
           </div>
           <div className="input-group-dcf">

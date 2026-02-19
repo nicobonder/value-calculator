@@ -90,7 +90,7 @@ h2 { margin: 0.5rem 0; }
 /* Input Groups */
 .input-group, .input-data { display: flex; flex-direction: row; margin-bottom: 0.5rem; }
 label { width: 75%; margin-right: 0.5rem; text-align: left; }
-.input-data label { width: 9rem; }
+.input-data label { width: 12rem; }
 .scenarios-grid input { width: 20%; }
 
 /* Buttons */
