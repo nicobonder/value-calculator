@@ -1,9 +1,14 @@
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import yfinance as yf
 import time
 import pandas as pd
 import numpy as np
+
+# --- NEW: Import the valuation logic ---
+from valuation_metrics import get_valuation_details
+# --- END NEW ---
 
 app = FastAPI()
 
@@ -18,6 +23,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 def _find_and_sum_from_df(df, keys, quarters=4):
     """
     Iterates through a list of possible keys to find a valid one in the DataFrame index.
@@ -27,13 +33,10 @@ def _find_and_sum_from_df(df, keys, quarters=4):
     for key in keys:
         if key in df.index:
             try:
-                # Get the first 'quarters' columns, sum them, and handle potential NaN result
                 value = df.loc[key].iloc[:quarters].sum()
                 if not pd.isnull(value):
                     return float(value)
             except (IndexError, TypeError):
-                # This could happen if iloc fails or sum returns an incompatible type.
-                # Continue to the next key.
                 continue
     return 0.0
 
@@ -42,7 +45,6 @@ def process_stock_data(stock: yf.Ticker, ticker: str) -> dict:
         info = stock.info
         cashflow_df = stock.quarterly_cashflow
 
-        # --- FIX: Make financial data extraction more robust ---
         OCF_KEYS = [
             'Operating Cash Flow',
             'Total Cash From Operating Activities',
@@ -58,14 +60,10 @@ def process_stock_data(stock: yf.Ticker, ticker: str) -> dict:
         fcfe = 0.0
 
         if not cashflow_df.empty:
-            # Use the robust helper function to find and sum values
             ocf = _find_and_sum_from_df(cashflow_df, OCF_KEYS)
             capex = _find_and_sum_from_df(cashflow_df, CAPEX_KEYS)
-
-            # FCFE formula: OCF + CapEx (since CapEx is usually negative)
             if ocf != 0.0:
                 fcfe = ocf + capex
-        # --- END FIX ---
 
         market_cap = info.get("marketCap")
         current_price = info.get("regularMarketPrice") or info.get("currentPrice")
@@ -113,6 +111,32 @@ def get_stock_data(ticker: str):
         return final_data
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+# --- NEW: Valuation Endpoint ---
+@app.get("/api/valuation/{ticker}")
+def get_valuation(ticker: str):
+    """Endpoint to get the full valuation details for a ticker."""
+    ticker_upper = ticker.upper()
+    
+    # Optional: Caching can be added here as well if needed
+    # if ticker_upper in CACHE and (time.time() - CACHE[ticker_upper]["timestamp"] < CACHE_DURATION_SECONDS):
+    #     return CACHE[ticker_upper]["data"]
+        
+    try:
+        valuation_data = get_valuation_details(ticker_upper)
+        if "error" in valuation_data:
+            raise HTTPException(status_code=404, detail=valuation_data["error"])
+        
+        # Optional: Caching the result
+        # CACHE[ticker_upper] = {"data": valuation_data, "timestamp": time.time()}
+        
+        return valuation_data
+    except Exception as e:
+        # Re-raise HTTPException to ensure proper error response format
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
+# --- END NEW ---
 
 @app.get("/api/treasury-yield")
 def get_treasury_yield():

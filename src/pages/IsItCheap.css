@@ -1,0 +1,110 @@
+.valuation-view {
+    padding: 2rem;
+    max-width: 800px;
+    margin: auto;
+}
+
+.search-bar {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+}
+
+.search-bar input {
+    flex-grow: 1;
+    padding: 0.75rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.search-bar button {
+    padding: 0.75rem 1.5rem;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.search-bar button:disabled {
+    background-color: #a0a0a0;
+    cursor: not-allowed;
+}
+
+.search-bar button:hover:not(:disabled) {
+    background-color: #0056b3;
+}
+
+.error-message {
+    color: #d9534f;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.results-container.fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.results-summary {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    border-radius: 8px;
+    background-color: var(--primary-green);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.overall-rating {
+    padding: 1rem;
+    margin-top: 1rem;
+    border-radius: 5px;
+    color: white;
+    display: inline-block;
+}
+
+.overall-cheap { background-color: #58df77; }
+.overall-fair { background-color: #ffc107; color: #212529;}
+.overall-expensive { background-color: #ea4e5e; }
+.overall-unknown { background-color: #6c757d; }
+
+.metrics-table {
+    width: 100%;
+    border-collapse: collapse;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.metrics-table thead th {
+    background-color: var(--primary-green);
+}
+
+.metrics-table th, .metrics-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.metrics-table th {
+    background-color: #e9ecef;
+    font-weight: 600;
+}
+
+.rating-cell {
+    font-weight: bold;
+    color: white;
+    text-align: center;
+    border-radius: 3px;
+    padding: 0.5rem;
+}
+
+.rating-very-cheap { background-color: #28a745; }
+.rating-fair-price { background-color: #90ee90; color: #212529;}
+.rating-expensive { background-color: #ffc107; color: #212529;}
+.rating-very-expensive { background-color: #dc3545; }
+.rating-na { background-color: #6c757d; }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
