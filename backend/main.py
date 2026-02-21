@@ -1,4 +1,5 @@
 
+import logging
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import yfinance as yf
@@ -6,7 +7,31 @@ import time
 import pandas as pd
 import numpy as np
 
-# --- NEW: Import the valuation logic ---
+# --- Logging Configuration ---
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    filename='backend.log',  # Log to a file
+    filemode='a'             # Append to the log file
+)
+
+# Redirect stdout and stderr to the logger
+class LoggingStream:
+    def write(self, message):
+        if message.strip(): # Avoid logging empty lines
+            logging.info(message.strip())
+    def flush(self):
+        pass
+
+import sys
+sys.stdout = LoggingStream()
+sys.stderr = LoggingStream()
+
+print("--- Logging is configured. Backend starting. ---")
+# --- End Logging --- 
+
+
+# --- Import the valuation logic ---
 from valuation_metrics import get_valuation_details
 # --- END NEW ---
 

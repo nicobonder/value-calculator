@@ -19,13 +19,14 @@
 }
 
 .search-bar button {
-    padding: 0.75rem 1.5rem;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
+    background: var(--primary-green); 
+    color: #000; 
+    padding: 14px 40px; 
+    border-radius: 6px; 
+    font-weight: 800; 
+    border: none; 
+    cursor: pointer; 
+    transition: all 0.3s ease; 
 }
 
 .search-bar button:disabled {
@@ -34,7 +35,8 @@
 }
 
 .search-bar button:hover:not(:disabled) {
-    background-color: #0056b3;
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
 }
 
 .error-message {
@@ -64,9 +66,14 @@
     display: inline-block;
 }
 
-.overall-cheap { background-color: #58df77; }
+.overall-rating p {
+    margin: 0;
+    font-size: 1.4rem;
+}
+
+.overall-cheap { background-color: #28a745; color: black; }
 .overall-fair { background-color: #ffc107; color: #212529;}
-.overall-expensive { background-color: #ea4e5e; }
+.overall-expensive { background-color: rgba(234, 78, 94, 0.8);}
 .overall-unknown { background-color: #6c757d; }
 
 .metrics-table {

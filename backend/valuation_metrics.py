@@ -1,6 +1,8 @@
 
 import yfinance as yf
 import pandas as pd
+import re
+import datetime
 
 METRIC_THRESHOLDS = {
     "Forward Price to Sales (F P/S)": [(5, 5), (10, 3), (15, 1)],
@@ -20,7 +22,8 @@ SCORE_RATINGS = {
 }
 
 def get_score_and_rating(metric_name, value):
-    if value is None or value < 0:
+    """Calculates the score and rating for a given metric and value."""
+    if value is None or pd.isna(value) or value < 0:
         return 0, "N/A"
     
     thresholds = METRIC_THRESHOLDS.get(metric_name, [])
@@ -32,6 +35,7 @@ def get_score_and_rating(metric_name, value):
     return 0, SCORE_RATINGS[0]
 
 def _find_df_value(df, keys, index=0):
+    """Helper to find the first valid value for a list of possible keys in a DataFrame."""
     for key in keys:
         if key in df.index:
             value = df.loc[key].iloc[index]
@@ -40,6 +44,7 @@ def _find_df_value(df, keys, index=0):
     return 0.0
 
 def _find_and_sum_quarters(df, keys, num_quarters=4):
+    """Finds the first valid key and sums the last N quarters."""
     for key in keys:
         if key in df.index:
             values = df.loc[key].iloc[:num_quarters]
@@ -48,42 +53,62 @@ def _find_and_sum_quarters(df, keys, num_quarters=4):
     return 0.0
 
 def get_valuation_details(ticker_symbol: str) -> dict:
+    """
+    Fetches financial data for a ticker and calculates valuation metrics and scores.
+    """
     try:
-        print(f"--- Fetching data for {ticker_symbol} ---")
         stock = yf.Ticker(ticker_symbol)
         info = stock.info
         
-        # --- DEBUG: Print info object content ---
-        print("yf.Ticker('...').info object:")
-        print(info)
-        # --- END DEBUG ---
-
         if not info or info.get('quoteType') == "NONE" or not info.get('longName'):
-             # --- DEBUG: Log the reason for invalid ticker ---
-             print(f"Validation failed: Ticker {ticker_symbol} is invalid or no data found.")
-             # --- END DEBUG ---
              raise ValueError(f"Invalid ticker or no data found: {ticker_symbol}")
 
         financials = stock.financials
         quarterly_cashflow = stock.quarterly_cashflow
 
+        # --- Base Data ---
         market_cap = info.get("marketCap", 0)
 
+        # --- Direct Metrics from yfinance ---
         ps_trailing = info.get("priceToSalesTrailing12Months")
         pe_forward = info.get("forwardPE")
         pe_trailing = info.get("trailingPE")
-        ps_forward = info.get("forwardPS")
+        
+        # --- FORWARD P/S CALCULATION ---
+        ps_forward = None
+        forward_revenue = None
+        
+        try:
+            revenue_estimate_table = stock.revenue_estimate
+            if revenue_estimate_table is not None and not revenue_estimate_table.empty:
+                # The target is the row '+1y' (Next Year) and the column 'avg' (Average Estimate).
+                if '+1y' in revenue_estimate_table.index and 'avg' in revenue_estimate_table.columns:
+                    forward_revenue = revenue_estimate_table.loc['+1y', 'avg']
+                else:
+                    pass
+        # else: The table is not available.
+        except Exception as e:
+            # The attribute might not exist for some tickers, which is an acceptable failure.
+            pass
 
+        if market_cap and forward_revenue and forward_revenue > 0:
+            print("Market cap: ", market_cap)
+            print("Forward revenue: ", forward_revenue)
+            ps_forward = market_cap / forward_revenue
+
+        # Price to Gross Profit (P/GP)
         revenue = _find_df_value(financials, ['Total Revenue', 'Revenue'])
         cost_of_revenue = _find_df_value(financials, ['Cost Of Revenue'])
         gross_profit = revenue - cost_of_revenue if revenue and cost_of_revenue else 0
         p_gp = market_cap / gross_profit if gross_profit > 0 else None
 
+        # Price to Free Cash Flow (P/FCF)
         ocf_ttm = _find_and_sum_quarters(quarterly_cashflow, ['Total Cash From Operating Activities', 'Operating Cash Flow'])
         capex_ttm = _find_and_sum_quarters(quarterly_cashflow, ['Capital Expenditure'])
         fcf_ttm = ocf_ttm + capex_ttm if ocf_ttm and capex_ttm else 0
         p_fcf = market_cap / fcf_ttm if fcf_ttm > 0 else None
         
+        # Forward Price to Free Cash Flow (F P/FCF)
         analyst_growth = info.get("earningsGrowth")
         p_fcf_forward = None
         if fcf_ttm > 0 and analyst_growth is not None:
@@ -93,11 +118,11 @@ def get_valuation_details(ticker_symbol: str) -> dict:
 
         all_metrics = {
             "Price to Sales (P/S)": ps_trailing,
-            "Forward Price to Sales (F P/S)": ps_forward,
             "Price to Gross Profit (P/GP)": p_gp,
             "Price to Earnings (P/E)": pe_trailing,
-            "Forward Price to Earnings (F P/E)": pe_forward,
             "Price to Free Cash Flow (P/FCF)": p_fcf,
+            "Forward Price to Sales (F P/S)": ps_forward,
+            "Forward Price to Earnings (F P/E)": pe_forward,
             "Forward Price to Free Cash Flow (F P/FCF)": p_fcf_forward,
         }
         
@@ -113,18 +138,18 @@ def get_valuation_details(ticker_symbol: str) -> dict:
                 "score": score,
                 "rating": rating
             })
-            if value is not None and value > 0:
+            if value is not None and pd.notna(value) and value > 0:
                 total_score += score
                 valid_metrics_count += 1
         
         final_score = total_score / valid_metrics_count if valid_metrics_count > 0 else 0
         overall_rating = "Unknown"
         if final_score >= 4:
-            overall_rating = "Cheap 🟢"
+            overall_rating = "Cheap 😃"
         elif final_score >= 2.5:
-            overall_rating = "Fair Price 🟡"
+            overall_rating = "Fair Price 👍"
         elif final_score > 0:
-            overall_rating = "Expensive 🔴"
+            overall_rating = "Expensive 🤒"
 
         return {
             "ticker": ticker_symbol,
@@ -134,7 +159,4 @@ def get_valuation_details(ticker_symbol: str) -> dict:
             "overallRating": overall_rating,
         }
     except Exception as e:
-        # --- DEBUG: Print exception details ---
-        print(f"An exception occurred: {e}")
-        # --- END DEBUG ---
         return {"error": str(e)}
