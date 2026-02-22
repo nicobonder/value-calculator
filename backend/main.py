@@ -1,43 +1,27 @@
 
 import logging
+import time
+import sys
+import requests 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import yfinance as yf
-import time
 import pandas as pd
 import numpy as np
+from valuation_metrics import get_valuation_details
 
-# --- Logging Configuration ---
+# --- Logging Configuration (Console Only) ---
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
-    filename='backend.log',  # Log to a file
-    filemode='a'             # Append to the log file
 )
 
-# Redirect stdout and stderr to the logger
-class LoggingStream:
-    def write(self, message):
-        if message.strip(): # Avoid logging empty lines
-            logging.info(message.strip())
-    def flush(self):
-        pass
+logging.info("--- Logging is configured. Backend starting. ---")
 
-import sys
-sys.stdout = LoggingStream()
-sys.stderr = LoggingStream()
-
-print("--- Logging is configured. Backend starting. ---")
-# --- End Logging --- 
-
-
-# --- Import the valuation logic ---
-from valuation_metrics import get_valuation_details
-# --- END NEW ---
-
+# --- App Initialization ---
 app = FastAPI()
-
 CACHE = {}
+SEARCH_CACHE = {}
 CACHE_DURATION_SECONDS = 3600
 
 app.add_middleware(
@@ -48,13 +32,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# --- Helper Functions ---
 
 def _find_and_sum_from_df(df, keys, quarters=4):
-    """
-    Iterates through a list of possible keys to find a valid one in the DataFrame index.
-    If found, it sums the values for the specified number of recent quarters.
-    Returns 0.0 if no key is found or if the data is invalid.
-    """
     for key in keys:
         if key in df.index:
             try:
@@ -120,7 +100,49 @@ def process_stock_data(stock: yf.Ticker, ticker: str) -> dict:
         return processed_data
 
     except Exception as e:
+        logging.error(f"Error processing stock data for {ticker}: {e}")
         return {k: 0 for k in ["name", "ticker", "revenue", "marketCap", "fcf", "capex", "totalDebt", "totalCash", "sharesOutstanding", "beta"]}
+
+# --- API Endpoints ---
+
+@app.get("/api/search/{query}")
+def search_ticker(query: str):
+    """
+    API endpoint to search for stock tickers and names. This version is more robust.
+    It uses a more stable endpoint and handles missing data gracefully.
+    """
+    query_lower = query.lower()
+    if query_lower in SEARCH_CACHE and (time.time() - SEARCH_CACHE[query_lower]["timestamp"] < CACHE_DURATION_SECONDS):
+        return SEARCH_CACHE[query_lower]["data"]
+
+    try:
+        url = f"https://query2.finance.yahoo.com/v1/finance/search?q={query}"
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        response = requests.get(url, headers=headers)
+        response.raise_for_status() 
+        data = response.json()
+
+        results = []
+        for item in data.get("quotes", []):
+            if item.get("symbol") and (item.get("longname") or item.get("shortname")):
+                if item.get("quoteType") in ["EQUITY", "ETF"]:
+                    results.append({
+                        "ticker": item["symbol"],
+                        "name": item.get("longname") or item.get("shortname")
+                    })
+
+        SEARCH_CACHE[query_lower] = {"data": results, "timestamp": time.time()}
+        return results
+
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Yahoo Finance search API request failed: {e}")
+        raise HTTPException(status_code=503, detail="Could not connect to the search service.")
+    except Exception as e:
+        logging.error(f"An unexpected error occurred during ticker search: {e}")
+        raise HTTPException(status_code=500, detail="An error occurred while searching.")
+
 
 @app.get("/api/stock/{ticker}")
 def get_stock_data(ticker: str):
@@ -131,37 +153,25 @@ def get_stock_data(ticker: str):
         stock = yf.Ticker(ticker_upper)
         if not stock.info or stock.info.get('quoteType') == "NONE" or not stock.info.get('longName'):
             raise ValueError(f"Ticker '{ticker_upper}' not found or data is unavailable.")
+        
         final_data = process_stock_data(stock, ticker_upper)
         CACHE[ticker_upper] = {"data": final_data, "timestamp": time.time()}
         return final_data
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
 
-# --- NEW: Valuation Endpoint ---
 @app.get("/api/valuation/{ticker}")
 def get_valuation(ticker: str):
-    """Endpoint to get the full valuation details for a ticker."""
     ticker_upper = ticker.upper()
-    
-    # Optional: Caching can be added here as well if needed
-    # if ticker_upper in CACHE and (time.time() - CACHE[ticker_upper]["timestamp"] < CACHE_DURATION_SECONDS):
-    #     return CACHE[ticker_upper]["data"]
-        
     try:
         valuation_data = get_valuation_details(ticker_upper)
         if "error" in valuation_data:
             raise HTTPException(status_code=404, detail=valuation_data["error"])
-        
-        # Optional: Caching the result
-        # CACHE[ticker_upper] = {"data": valuation_data, "timestamp": time.time()}
-        
         return valuation_data
     except Exception as e:
-        # Re-raise HTTPException to ensure proper error response format
         if isinstance(e, HTTPException):
             raise e
         raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
-# --- END NEW ---
 
 @app.get("/api/treasury-yield")
 def get_treasury_yield():
@@ -179,6 +189,7 @@ def get_treasury_yield():
     except Exception as e:
         raise HTTPException(status_code=500, detail="Failed to fetch 10-Year Treasury Yield.")
 
+# --- Main Execution ---
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

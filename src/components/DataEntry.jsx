@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
-// Helper to format numbers as USD currency
+// --- Helper Functions for Formatting ---
 const formatCurrency = (value) => {
   if (value === null || value === undefined || value === '') return '';
   const number = Number(value);
@@ -13,26 +13,26 @@ const formatCurrency = (value) => {
   }).format(number);
 };
 
-// Helper to parse currency string back to a number-compatible string
 const parseCurrency = (value) => {
   if (typeof value !== 'string') return value;
-  // Remove currency symbols and commas
   return value.replace(/[\$\s,]/g, '');
 };
 
-const DataEntry = ({ data, onChange, onBlur }) => {
+// --- Component ---
+const DataEntry = ({ data, onChange, onSelectTicker, searchResults, onClearSearch }) => {
   const fields = [
-    { name: 'ticker', label: 'Ticker', type: 'text' },
+    { name: 'ticker', label: 'Ticker or Company Name', type: 'text' },
     { name: 'marketCap', label: 'Market Cap', type: 'number', isCurrency: true },
     { name: 'revenue', label: 'Revenue', type: 'number', isCurrency: true },
     { name: 'fcf', label: 'Free Cash Flow (ttm)', type: 'number', isCurrency: true },
     { name: 'horizon', label: 'Horizon (Years)', type: 'number' },
   ];
 
+  const searchRef = useRef(null); // Ref for the search container
+
   const handleChange = (name, value, isCurrency) => {
     if (isCurrency) {
       const parsed = parseCurrency(value);
-      // Allow only digits or an empty string
       if (/^[0-9]*$/.test(parsed)) {
         const numericValue = parsed === '' ? '' : Number(parsed);
         onChange(name, numericValue);
@@ -42,21 +42,49 @@ const DataEntry = ({ data, onChange, onBlur }) => {
     }
   };
 
+  // Close dropdown if clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        onClearSearch();
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [onClearSearch]);
+
   return (
     <section className="card data-entry">
       <h2>Data Entry</h2>
       <div className="grid-inputs">
         {fields.map(f => (
-          <div className="input-data" key={f.name}>
+          <div 
+            className={`input-data ${f.name === 'ticker' ? 'search-container' : ''}`}
+            key={f.name}
+            ref={f.name === 'ticker' ? searchRef : null}
+          >
             <label>{f.label}</label>
             <input 
-              type={f.isCurrency ? 'text' : f.type} // Use text type to display formatted string
+              type={f.isCurrency ? 'text' : f.type}
               value={f.isCurrency ? formatCurrency(data[f.name]) : data[f.name]}
               onChange={(e) => handleChange(f.name, e.target.value, f.isCurrency)}
-              onBlur={f.name === 'ticker' ? onBlur : null}
-              placeholder={f.name === 'ticker' ? "e.g. GOOG" : ""}
-              className="input-field" // Added for consistency
+              placeholder={f.name === 'ticker' ? "e.g., NVDA or Nvidia" : ""}
+              className="input-field"
+              autoComplete="off" // Disable browser autocomplete
             />
+            {f.name === 'ticker' && searchResults.length > 0 && (
+              <ul className="search-results">
+                {searchResults.map((result) => (
+                  <li 
+                    key={result.ticker}
+                    onClick={() => onSelectTicker(result.ticker)} // onSelectTicker is the new prop
+                  >
+                    <span className="ticker-symbol">{result.ticker}</span>
+                    <span className="company-name">{result.name}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         ))}
       </div>

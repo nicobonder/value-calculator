@@ -12,6 +12,7 @@
       ps.fastapi
       ps.lxml       # Added for yfinance decryption
       ps.curl-cffi  # Added for yfinance decryption
+      ps.requests   # Added for the new search endpoint
     ]))
   ];
   # Sets environment variables in the workspace

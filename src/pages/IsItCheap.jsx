@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { getValuationData } from '../services/api';
-import './IsItCheap.css'; // We'll create this file next for styling.
+import '../styles/IsItCheap.css';
 
 const IsItCheap = () => {
   const [ticker, setTicker] = useState('');
@@ -37,7 +37,6 @@ const IsItCheap = () => {
     }
   };
 
-  // --- UPDATED: Make the class detection more flexible ---
   const getOverallRatingClass = (rating) => {
     if (!rating) return 'overall-unknown';
     if (rating.includes('Cheap')) return 'overall-cheap';
@@ -45,11 +44,10 @@ const IsItCheap = () => {
     if (rating.includes('Expensive')) return 'overall-expensive';
     return 'overall-unknown';
   };
-  // --- END UPDATE ---
 
   return (
     <div className="container valuation-view">
-      <h1>Is It Cheap? Valuation Tool</h1>
+      <h1>Is It Cheap?</h1>
       
       <div className="search-bar">
         <input

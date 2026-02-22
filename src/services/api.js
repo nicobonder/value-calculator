@@ -1,5 +1,26 @@
 
 /**
+ * Fetches a list of stocks matching a search query.
+ * The backend endpoint is expected to return an array of objects, 
+ * where each object contains a "ticker" and "name".
+ * @param {string} query The search term (e.g., "Nvidia" or "NVDA").
+ * @returns {Promise<Array<{ticker: string, name: string}>>} A promise that resolves to a list of matching stocks.
+ */
+export const searchTickers = async (query) => {
+  if (!query) return [];
+  try {
+    const response = await fetch(`/api/search/${query}`);
+    if (!response.ok) {
+      throw new Error('Search request failed');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Error searching for tickers:", error);
+    throw error; // Re-throw to be caught by the calling function
+  }
+};
+
+/**
  * Fetches comprehensive financial data for a given stock ticker.
  * The backend endpoint is expected to return all necessary metrics for valuation,
  * including revenue, market cap, free cash flow, debt, cash, shares, and beta.

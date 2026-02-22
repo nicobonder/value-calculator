@@ -9,8 +9,8 @@ import { useValuation } from '../hooks/useValuation';
 const ExitMultiple = () => {
   const [showHelp, setShowHelp] = useState(false);
   const { 
-    dataEntry, scenarios, analysis, 
-    updateDataEntry, updateScenario, fetchTicker, calculate 
+    dataEntry, scenarios, analysis, searchResults,
+    updateDataEntry, updateScenario, handleTickerSelection, calculate, clearSearchResults
   } = useValuation();
 
   return (
@@ -25,7 +25,9 @@ const ExitMultiple = () => {
       <DataEntry 
         data={dataEntry} 
         onChange={updateDataEntry} 
-        onBlur={fetchTicker} 
+        onSelectTicker={handleTickerSelection}
+        searchResults={searchResults}
+        onClearSearch={clearSearchResults}
       />
 
       <ScenarioSection 
