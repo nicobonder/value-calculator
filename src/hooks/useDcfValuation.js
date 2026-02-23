@@ -1,7 +1,7 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { getTickerData, getTreasuryYield } from '../services/api';
+import _ from 'lodash';
+import { getTickerData, getTreasuryYield, searchTickers } from '../services/api';
 
 const DEFAULT_ASSUMPTIONS = {
   growthRate: 15,
@@ -17,6 +17,38 @@ export const useDcfValuation = () => {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // --- START: SEARCH LOGIC (COPIED FROM WORKING HOOK) ---
+  const [searchResults, setSearchResults] = useState([]);
+
+  const debouncedSearch = useCallback(
+    _.debounce(async (query) => {
+      if (query) {
+        try {
+          const results = await searchTickers(query);
+          setSearchResults(results);
+        } catch (error) {
+          console.error("Search failed:", error);
+          setSearchResults([]);
+        }
+      } else {
+        setSearchResults([]);
+      }
+    }, 300),
+    []
+  );
+
+  const updateDcfEntry = (field, value) => {
+    if (field === 'ticker') {
+      setTicker(value);
+      debouncedSearch(value);
+    }
+  };
+
+  const clearSearchResults = useCallback(() => {
+    setSearchResults([]);
+  }, []);
+  // --- END: SEARCH LOGIC ---
+
   const fetchTickerData = useCallback(async (tickerToFetch) => {
     if (!tickerToFetch) {
       toast.error("Please enter a ticker first.");
@@ -25,6 +57,7 @@ export const useDcfValuation = () => {
     setLoading(true);
     setResult(null);
     setApiData(null);
+    setSearchResults([]); // Clear results on new fetch
     const toastId = toast.loading(`Fetching data for ${tickerToFetch.toUpperCase()}...`);
 
     try {
@@ -33,8 +66,9 @@ export const useDcfValuation = () => {
         getTreasuryYield(),
       ]);
 
-      // --- FIX: Simplify data structure and use correct fields ---
       const requiredData = {
+        name: tickerInfo.name,
+        ticker: tickerInfo.ticker,
         fcf: tickerInfo.fcf, 
         totalDebt: tickerInfo.totalDebt,
         cash: tickerInfo.totalCash,
@@ -42,10 +76,10 @@ export const useDcfValuation = () => {
         beta: tickerInfo.beta,
         riskFreeRate: treasuryYield,
       };
-      // --- END FIX ---
 
       setApiData(requiredData);
-      toast.success(`Data loaded for ${tickerToFetch.toUpperCase()}`, { id: toastId });
+      setTicker(tickerInfo.ticker); // Update ticker to official one
+      toast.success(`Data loaded for ${tickerInfo.name || tickerToFetch.toUpperCase()}`, { id: toastId });
 
     } catch (error) {
       console.error("Failed to fetch DCF data:", error);
@@ -55,6 +89,16 @@ export const useDcfValuation = () => {
       setLoading(false);
     }
   }, []);
+
+  // --- START: SELECTION LOGIC (COPIED FROM WORKING HOOK) ---
+  const handleTickerSelection = useCallback((selected) => {
+    setTicker(selected.ticker); 
+    setSearchResults([]);
+    fetchTickerData(selected.ticker);
+  }, [fetchTickerData]);
+  // --- END: SELECTION LOGIC ---
+
+  // --- NO OTHER CHANGES BELOW THIS LINE ---
 
   useEffect(() => {
     if (apiData) {
@@ -79,9 +123,7 @@ export const useDcfValuation = () => {
       return;
     }
 
-    // --- FIX: Use apiData.fcf as the starting point for the calculation ---
     const fcfe0 = apiData.fcf;
-    // --- END FIX ---
     const g = assumptions.growthRate / 100;
     const gt = assumptions.terminalGrowth / 100;
     const r = assumptions.discountRate / 100;
@@ -117,9 +159,14 @@ export const useDcfValuation = () => {
   };
 
   return {
-    ticker, setTicker,
+    ticker, 
     apiData, updateApiData,
     assumptions, updateAssumption,
-    result, loading, fetchTickerData, calculateFairValue,
+    result, loading, calculateFairValue,
+    // --- EXPORT NEW FUNCTIONS ---
+    searchResults,
+    updateDcfEntry,
+    handleTickerSelection,
+    clearSearchResults,
   };
 };

@@ -1,75 +1,29 @@
-
 import React, { useState } from 'react';
 import { useDcfValuation } from '../hooks/useDcfValuation';
 import { formatCurrency, formatPercentage } from '../utils/formatters';
 import HelpModalDCF from '../components/HelpModalDCF';
+import DcfDataEntry from '../components/DcfDataEntry'; // IMPORT THE CORRECT COMPONENT
 
 const DCF = () => {
+  // All the logic is handled by the hook
   const {
-    ticker, setTicker,
-    apiData, updateApiData,
-    assumptions, updateAssumption,
+    ticker,
+    apiData, 
+    updateApiData,
+    assumptions, 
+    updateAssumption,
     result,
     loading,
-    fetchTickerData,
     calculateFairValue,
+    searchResults,
+    updateDcfEntry,
+    handleTickerSelection,
+    clearSearchResults,
   } = useDcfValuation();
 
   const [isHelpModalOpen, setHelpModalOpen] = useState(false);
 
-  const handleTickerChange = (e) => {
-    setTicker(e.target.value.toUpperCase());
-  };
-
-  const handleFetchClick = () => {
-    fetchTickerData(ticker);
-  };
-
-  // --- NEW: Input Formatting Logic ---
-  const handleFormattedInputChange = (field, value) => {
-    const cleanedValue = value.replace(/[,]/g, '');
-    const numericValue = cleanedValue === '' ? '' : parseFloat(cleanedValue);
-    
-    if (!isNaN(numericValue) || numericValue === '') {
-      updateApiData(field, numericValue);
-    }
-  };
-  
-  const getDisplayValue = (field, rawValue) => {
-    if (rawValue === null || rawValue === undefined || rawValue === '') {
-      return '';
-    }
-    
-    switch(field) {
-      case 'fcf':
-      case 'totalDebt':
-      case 'cash':
-      case 'sharesOutstanding':
-        return new Intl.NumberFormat('en-US').format(Math.trunc(rawValue));
-      case 'beta':
-        return rawValue;
-      default:
-        return rawValue;
-    }
-  };
-  // --- END NEW ---
-
-  const renderDataInput = (field, label) => {
-    const value = apiData && apiData[field] !== null ? apiData[field] : '';
-    
-    return (
-      <div className="input-group-dcf" key={field}>
-        <label>{label}</label>
-        <input
-          type="text"
-          value={getDisplayValue(field, value)}
-          onChange={(e) => handleFormattedInputChange(field, e.target.value)}
-          disabled={!apiData}
-        />
-      </div>
-    );
-  };
-
+  // This parent component now only renders the general layout and passes props down.
   return (
     <div className="container dcf-view">
       {isHelpModalOpen && <HelpModalDCF onClose={() => setHelpModalOpen(false)} />}
@@ -79,39 +33,28 @@ const DCF = () => {
       </div>
 
       <div className="dcf-grid">
-        <div className="data-entry-dcf card">
-          <h2>Key Data</h2>
-          <div className="input-group-dcf">
-            <label><strong>Ticker</strong></label>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <input 
-                type="text" 
-                value={ticker} 
-                onChange={handleTickerChange}
-                placeholder="e.g. WMT"
-                style={{ width: '100px'}}
-              />
-              <button onClick={handleFetchClick} disabled={loading} className="btn-fetch">Fetch</button>
-            </div>
-          </div>
-          
-          {apiData && (
-            <>
-              {renderDataInput('fcf', 'Free Cash Flow (TTM)')}
-              {renderDataInput('totalDebt', 'Total Debt')}
-              {renderDataInput('cash', 'Cash & Equivalents')}
-              {renderDataInput('sharesOutstanding', 'Shares Outstanding')}
-              {renderDataInput('beta', 'Beta')}
-            </>
-          )}
-        </div>
+        {/* 
+          HERE IS THE KEY CHANGE:
+          The hardcoded data entry form is replaced by the DcfDataEntry component.
+          All the necessary state and functions are passed as props.
+        */}
+        <DcfDataEntry
+          ticker={ticker}
+          apiData={apiData}
+          updateApiData={updateApiData}
+          loading={loading}
+          searchResults={searchResults}
+          handleTickerSelection={handleTickerSelection}
+          clearSearchResults={clearSearchResults}
+          updateDcfEntry={updateDcfEntry}
+        />
 
+        {/* The assumptions card remains here */}
         <div className="assumptions-dcf card">
           <div className="assumptions-header">
             <h2>Your Assumptions</h2>
             <button className="help-button" onClick={() => setHelpModalOpen(true)}>?</button>
           </div>
-
           <div className="input-group-dcf">
             <label>FCF Growth Rate (5y)</label>
             <div>
