@@ -224,16 +224,16 @@ label { width: 75%; margin-right: 0.5rem; text-align: left; }
 
 /* --- Search Results Dropdown --- */
 /* This makes the parent of the absolute positioned list a reference point */
-.search-container, .ticker-search-wrapper {
+.input-data.search-container, .search-container, .ticker-search-wrapper {
   position: relative;
 }
 
 .search-results {
   position: absolute;
   top: 100%;
-  left: -300%;
-  width: 20rem;
-  background-color: #2a2a2a; /* Slightly lighter than card background */
+  left: 0; /* FIX: Was -300%, which hid the list off-screen */
+  width: 100%; /* FIX: Was a fixed width, now it matches its container */
+  background-color: #2a2a2a;
   border: 1px solid var(--primary-green);
   border-top: none;
   border-radius: 0 0 8px 8px;

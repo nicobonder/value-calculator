@@ -44,7 +44,7 @@ const IsItCheap = () => {
       <h1>Is It Cheap?</h1>
 
       {/* This is the new search bar, matching the other pages */}
-      <div className="search-container" onBlur={handleInputBlur}>
+      <div className="search-container-cheap" onBlur={handleInputBlur}>
         <div className="ticker-search-wrapper">
           <input
             type="text"

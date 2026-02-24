@@ -8,10 +8,9 @@
   box-sizing: border-box;
 }
 
-/* Establecemos un ancho máximo para que flexbox lo pueda centrar */
-.search-container {
+.search-container-cheap {
   width: 100%;
-  max-width: 20rem; /* Un ancho razonable para el buscador */
+  max-width: 20rem;
   margin-bottom: 2rem;
   background-color: #ffeb3b;
   display: flex;
