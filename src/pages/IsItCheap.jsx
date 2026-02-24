@@ -1,30 +1,24 @@
-
-import React, { useState } from 'react';
-import { getValuationData } from '../services/api';
+import React from 'react';
+import { useIsItCheap } from '../hooks/useIsItCheap';
 import '../styles/IsItCheap.css';
 
 const IsItCheap = () => {
-  const [ticker, setTicker] = useState('');
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const {
+    ticker,
+    data,
+    loading,
+    error,
+    searchResults,
+    updateTicker,
+    handleTickerSelection,
+    clearSearchResults,
+  } = useIsItCheap();
 
-  const handleFetch = async () => {
-    if (!ticker) {
-      setError('Please enter a ticker symbol.');
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    setData(null);
-    try {
-      const result = await getValuationData(ticker);
-      setData(result);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+  const handleInputBlur = () => {
+    // Use a timeout to allow the click on a search result to register
+    setTimeout(() => {
+      clearSearchResults();
+    }, 200);
   };
 
   const getRatingClass = (rating) => {
@@ -46,20 +40,31 @@ const IsItCheap = () => {
   };
 
   return (
-    <div className="container valuation-view">
+    <div className="valuation-view">
       <h1>Is It Cheap?</h1>
-      
-      <div className="search-bar">
-        <input
-          type="text"
-          value={ticker}
-          onChange={(e) => setTicker(e.target.value.toUpperCase())}
-          onKeyPress={(e) => e.key === 'Enter' && handleFetch()}
-          placeholder="Enter Ticker (e.g., WMT)"
-        />
-        <button onClick={handleFetch} disabled={loading}>
-          {loading ? 'Fetching...' : 'Analyze'}
-        </button>
+
+      {/* This is the new search bar, matching the other pages */}
+      <div className="search-container" onBlur={handleInputBlur}>
+        <div className="ticker-search-wrapper">
+          <input
+            type="text"
+            value={ticker}
+            onChange={(e) => updateTicker(e.target.value)}
+            placeholder="Enter Ticker or Company Name (e.g., WMT)"
+            disabled={loading}
+            autoComplete="off"
+          />
+          {searchResults.length > 0 && (
+            <ul className="search-results">
+              {searchResults.map((item) => (
+                <li key={item.ticker} onMouseDown={() => handleTickerSelection(item)}>
+                  <span className="ticker-symbol">{item.ticker}</span>
+                  <span className="company-name">{item.name}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
 
       {error && <p className="error-message">Error: {error}</p>}
