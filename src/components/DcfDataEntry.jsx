@@ -44,9 +44,10 @@ const DcfDataEntry = ({
         <div className="data-entry-dcf card">
             <h2>Key Data</h2>
             <div className="input-group-dcf">
-                <label><strong>Ticker or Company Name</strong></label>
-                <div className="ticker-search-wrapper" onBlur={handleLocalBlur}>
+                <label className='dcf-label'><strong>Ticker or Company Name</strong></label>
+                <div className="key-data-wrapper" onBlur={handleLocalBlur}>
                     <input 
+                        className='dcf-input'
                         type="text" 
                         id="ticker"
                         value={ticker}
@@ -58,7 +59,7 @@ const DcfDataEntry = ({
                     />
                     {/* This JSX for displaying results is correct and remains unchanged. */}
                     {searchResults.length > 0 && (
-                        <ul className="search-results card">
+                        <ul className="search-results-dcf card">
                             {searchResults.map((item) => (
                                 <li key={item.ticker} onMouseDown={() => handleTickerSelection(item)}>
                                     <strong>{item.ticker}</strong> - {item.name}

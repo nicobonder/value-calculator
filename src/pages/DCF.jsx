@@ -56,34 +56,34 @@ const DCF = () => {
             <button className="help-button" onClick={() => setHelpModalOpen(true)}>?</button>
           </div>
           <div className="input-group-dcf">
-            <label>FCF Growth Rate (5y)</label>
+            <label className='assumption-label'>FCF Growth Rate (5y)</label>
             <div>
-              <input type="number" value={assumptions.growthRate} onChange={(e) => updateAssumption('growthRate', e.target.value)} />
+              <input className='assumption-input' type="number" value={assumptions.growthRate} onChange={(e) => updateAssumption('growthRate', e.target.value)} />
               <span>%</span>
             </div>
           </div>
           <div className="input-group-dcf">
-            <label>Discount Rate (r)</label>
+            <label className='assumption-label'>Discount Rate (r)</label>
             <div>
-              <input type="number" value={assumptions.discountRate} onChange={(e) => updateAssumption('discountRate', e.target.value)} />
+              <input className='assumption-input' type="number" value={assumptions.discountRate} onChange={(e) => updateAssumption('discountRate', e.target.value)} />
               <span>%</span>
             </div>
           </div>
           <div className="input-group-dcf auto-field">
-            <label>Risk-Free Rate (Rf)</label>
+            <label className='assumption-label'>Risk-Free Rate (Rf)</label>
             <span>{apiData ? formatPercentage(apiData.riskFreeRate) : 'N/A'}</span>
           </div>
           <div className="input-group-dcf">
-            <label>Equity Risk Premium (ERP)</label>
+            <label className='assumption-label'>Equity Risk Premium (ERP)</label>
             <div>
-              <input type="number" value={assumptions.equityRiskPremium} onChange={(e) => updateAssumption('equityRiskPremium', e.target.value)} />
+              <input className='assumption-input' type="number" value={assumptions.equityRiskPremium} onChange={(e) => updateAssumption('equityRiskPremium', e.target.value)} />
               <span>%</span>
             </div>
           </div>
           <div className="input-group-dcf default-field">
-            <label>Terminal Growth (g_t)</label>
+            <label className='assumption-label'>Terminal Growth (g_t)</label>
             <div>
-              <input type="number" value={assumptions.terminalGrowth} onChange={(e) => updateAssumption('terminalGrowth', e.target.value)} />
+              <input className='assumption-input' type="number" value={assumptions.terminalGrowth} onChange={(e) => updateAssumption('terminalGrowth', e.target.value)} />
               <span>%</span>
             </div>
           </div>
