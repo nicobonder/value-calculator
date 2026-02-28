@@ -123,7 +123,7 @@ def get_valuation_details(ticker_symbol: str) -> dict:
             "Price to Free Cash Flow (P/FCF)": p_fcf,
             "Forward Price to Sales (F P/S)": ps_forward,
             "Forward Price to Earnings (F P/E)": pe_forward,
-            "Forward Price to Free Cash Flow (F P/FCF)": p_fcf_forward,
+            "Forward Price to FCF (F P/FCF)": p_fcf_forward,
         }
         
         results = []

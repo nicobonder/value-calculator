@@ -92,6 +92,7 @@
   padding: 12px 15px;
   text-align: left;
   border-bottom: 1px solid #333;
+
 }
 
 .metrics-table thead th {
@@ -105,7 +106,74 @@
 }
 
 .rating-very-cheap { background-color: #4caf50; }
-.rating-fair-price { background-color: #ffeb3b; }
+.rating-fair-price { background-color: #ffeb3b; color: #000; }
 .rating-expensive { background-color: #f44336; }
 .rating-very-expensive { background-color: #b71c1c; }
 .rating-na { background-color: #9e9e9e; }
+
+
+@media (max-width: 980px) {
+  .metrics-table td {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 860px) {
+  .metrics-table th {
+    font-size: 0.9rem;
+  }
+
+  .metrics-table td {
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 814px) {
+  .valuation-view {
+    width: 90%;
+  }
+
+  .metrics-table th:nth-child(3),
+  .metrics-table td:nth-child(3) {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) { 
+  .valuation-view {
+    width: 100%;
+    padding: 1rem;
+  }
+
+  .overall-rating p {
+    font-size: 1rem;
+  }
+  
+  .results-container {
+    border: none;
+    width: 100%;
+  }
+
+  .metrics-table th {
+    display: none;
+  }
+
+  .metrics-table tr {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    align-content: center;
+    border-bottom: 1px solid var(--primary-green);
+    margin-bottom: 0.4rem;
+  }
+
+  .metrics-table td {
+    font-size: 0.9rem;
+    border: none;
+    padding: 0.3rem !important;
+  }
+
+  .rating-cell {
+    margin-bottom: 0.3rem;
+  }
+}

@@ -16,7 +16,7 @@ const ExitMultiple = () => {
   return (
     <main className="container">
       <div className='header-line'>
-        <h1>Possible Future Value</h1>
+        <h1>Exit Multiple Model</h1>
         <button className="help-button" onClick={() => setShowHelp(true)}>?</button>
       </div>
       
