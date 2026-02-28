@@ -73,7 +73,7 @@ const DcfDataEntry = ({
             {apiData && (
                 <>
                   <div className="data-summary">
-                    <p><strong>Company:</strong> {apiData.name} ({apiData.ticker})</p>
+                    <p><strong>Company:</strong><span className='company-name-dcf'> {apiData.name} ({apiData.ticker})</span></p>
                   </div>
     
                   {renderDataInput('fcf', 'Free Cash Flow (TTM)')}
