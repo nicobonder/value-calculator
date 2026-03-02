@@ -108,7 +108,7 @@ def process_stock_data(stock: yf.Ticker, ticker: str) -> dict:
 @app.get("/search/{query}")
 def search_ticker(query: str):
     query_lower = query.lower()
-    if query_lower in SEARCH_CACHE and (time.time() - SEARCH_CACHE[query_lower]["timestamp"] < CACHE_DURATION_SECONDS):
+    if query_lower in SEARCH_CACHE and (time.time() - SEARCH_CACHE[query_lower]['timestamp'] < CACHE_DURATION_SECONDS):
         return SEARCH_CACHE[query_lower]["data"]
 
     try:
@@ -118,13 +118,19 @@ def search_ticker(query: str):
         }
         response = requests.get(url, headers=headers)
         
-        # --- NUEVA GESTIÓN DE ERRORES ---
+        # Primero, revisamos si la respuesta no es 200 OK
         if response.status_code != 200:
-            error_detail = f"Yahoo API failed with status {response.status_code}: {response.text}"
+            error_detail = f"Yahoo API rejected request with status {response.status_code}. Response: {response.text[:500]}"
             logging.error(error_detail)
-            raise HTTPException(status_code=503, detail=error_detail)
-            
-        data = response.json()
+            raise HTTPException(status_code=503, detail="External search service is unavailable.")
+
+        # Segundo, intentamos decodificar el JSON, que es donde probablemente falla
+        try:
+            data = response.json()
+        except requests.exceptions.JSONDecodeError:
+            error_detail = f"Yahoo API returned a non-JSON response. Status: {response.status_code}. Response: {response.text[:500]}"
+            logging.error(error_detail)
+            raise HTTPException(status_code=502, detail="Invalid response from external search service.")
 
         results = []
         for item in data.get("quotes", []):
@@ -142,7 +148,6 @@ def search_ticker(query: str):
         logging.error(f"Network request to Yahoo failed: {e}")
         raise HTTPException(status_code=503, detail="Could not connect to external search service.")
     except Exception as e:
-        # Capturamos la HTTPException que creamos arriba, o cualquier otro error
         if isinstance(e, HTTPException):
             raise e
         logging.error(f"An unexpected error occurred during ticker search: {e}")
@@ -152,7 +157,7 @@ def search_ticker(query: str):
 @app.get("/stock/{ticker}")
 def get_stock_data(ticker: str):
     ticker_upper = ticker.upper()
-    if ticker_upper in CACHE and (time.time() - CACHE[ticker_upper]["timestamp"] < CACHE_DURATION_SECONDS):
+    if ticker_upper in CACHE and (time.time() - CACHE[ticker_upper]['timestamp'] < CACHE_DURATION_SECONDS):
         return CACHE[ticker_upper]["data"]
     try:
         stock = yf.Ticker(ticker_upper)
