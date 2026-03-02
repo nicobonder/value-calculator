@@ -105,7 +105,7 @@ def process_stock_data(stock: yf.Ticker, ticker: str) -> dict:
 
 # --- API Endpoints ---
 
-@app.get("/api/search/{query}")
+@app.get("/search/{query}")
 def search_ticker(query: str):
     """
     API endpoint to search for stock tickers and names. This version is more robust.
@@ -144,7 +144,7 @@ def search_ticker(query: str):
         raise HTTPException(status_code=500, detail="An error occurred while searching.")
 
 
-@app.get("/api/stock/{ticker}")
+@app.get("/stock/{ticker}")
 def get_stock_data(ticker: str):
     ticker_upper = ticker.upper()
     if ticker_upper in CACHE and (time.time() - CACHE[ticker_upper]["timestamp"] < CACHE_DURATION_SECONDS):
@@ -160,7 +160,7 @@ def get_stock_data(ticker: str):
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
 
-@app.get("/api/valuation/{ticker}")
+@app.get("/valuation/{ticker}")
 def get_valuation(ticker: str):
     ticker_upper = ticker.upper()
     try:
@@ -173,7 +173,7 @@ def get_valuation(ticker: str):
             raise e
         raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
 
-@app.get("/api/treasury-yield")
+@app.get("/treasury-yield")
 def get_treasury_yield():
     ticker = "^TNX"
     try:
