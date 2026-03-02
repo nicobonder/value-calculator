@@ -6,8 +6,8 @@ import pandas as pd
 import numpy as np
 from fastapi import APIRouter, HTTPException
 
-# Asumo que valuation_metrics.py está en el mismo nivel o es accesible
-from valuation_metrics import get_valuation_details
+# CORRECCIÓN: Usar importación relativa para subir un nivel desde 'routers' a 'api'
+from ..valuation_metrics import get_valuation_details
 
 router = APIRouter()
 
