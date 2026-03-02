@@ -107,10 +107,6 @@ def process_stock_data(stock: yf.Ticker, ticker: str) -> dict:
 
 @app.get("/search/{query}")
 def search_ticker(query: str):
-    """
-    API endpoint to search for stock tickers and names. This version is more robust.
-    It uses a more stable endpoint and handles missing data gracefully.
-    """
     query_lower = query.lower()
     if query_lower in SEARCH_CACHE and (time.time() - SEARCH_CACHE[query_lower]["timestamp"] < CACHE_DURATION_SECONDS):
         return SEARCH_CACHE[query_lower]["data"]
@@ -121,7 +117,13 @@ def search_ticker(query: str):
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
         response = requests.get(url, headers=headers)
-        response.raise_for_status() 
+        
+        # --- NUEVA GESTIÓN DE ERRORES ---
+        if response.status_code != 200:
+            error_detail = f"Yahoo API failed with status {response.status_code}: {response.text}"
+            logging.error(error_detail)
+            raise HTTPException(status_code=503, detail=error_detail)
+            
         data = response.json()
 
         results = []
@@ -137,11 +139,14 @@ def search_ticker(query: str):
         return results
 
     except requests.exceptions.RequestException as e:
-        logging.error(f"Yahoo Finance search API request failed: {e}")
-        raise HTTPException(status_code=503, detail="Could not connect to the search service.")
+        logging.error(f"Network request to Yahoo failed: {e}")
+        raise HTTPException(status_code=503, detail="Could not connect to external search service.")
     except Exception as e:
+        # Capturamos la HTTPException que creamos arriba, o cualquier otro error
+        if isinstance(e, HTTPException):
+            raise e
         logging.error(f"An unexpected error occurred during ticker search: {e}")
-        raise HTTPException(status_code=500, detail="An error occurred while searching.")
+        raise HTTPException(status_code=500, detail=f"An internal error occurred: {str(e)}")
 
 
 @app.get("/stock/{ticker}")
