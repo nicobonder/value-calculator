@@ -1,9 +1,11 @@
 
 import logging
-from fastapi import FastAPI, CORSMiddleware
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
-# Importar los routers que hemos creado
-from api.routers import search, stock
+# CORRECCIÓN FINAL: Usar importación relativa para los routers
+# Esto es crucial para que Python encuentre los módulos desde dentro del paquete 'api'
+from .routers import search, stock
 
 # --- Configuración del Logging ---
 logging.basicConfig(
@@ -15,7 +17,7 @@ logging.basicConfig(
 app = FastAPI(
     title="Value Calculator API",
     description="API para la calculadora de valor de acciones, con endpoints para búsqueda y datos financieros.",
-    version="1.0.0",
+    version="1.0.1", # Version bump
 )
 
 # --- Middleware de CORS ---
