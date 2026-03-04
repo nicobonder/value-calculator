@@ -1,4 +1,6 @@
-Flask
-Flask-Cors
+fastapi
+uvicorn
 requests
 yfinance
+pandas
+numpy
