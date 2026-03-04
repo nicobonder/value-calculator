@@ -12,20 +12,16 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s',
 )
 
-# --- Inicialización de la App FastAPI ---
 app = FastAPI(
     title="Value Calculator API",
     description="API para la calculadora de valor de acciones, con endpoints para búsqueda y datos financieros.",
-    version="1.1.0", # Version bump
+    version="1.2.0", # Version bump
+    root_path="/api"
 )
 
-# --- MANEJADOR DE EXCEPCIONES GLOBAL (NUESTRA 'CAJA NEGRA') ---
+# --- MANEJADOR DE EXCEPCIONES GLOBAL ---
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    """
-    Este manejador captura cualquier excepción no controlada en la aplicación,
-    evitando los 500 genéricos y devolviendo siempre un JSON con el detalle del error.
-    """
     logging.error(f"Unhandled exception for {request.method} {request.url}: {exc}", exc_info=True)
     return JSONResponse(
         status_code=500,
@@ -36,7 +32,7 @@ async def global_exception_handler(request: Request, exc: Exception):
         },
     )
 
-# --- Middleware de CORS ---
+# --- Middleware CORS ---
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -49,11 +45,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- Inclusión de Routers ---
+# --- Routers ---
 app.include_router(search.router)
 app.include_router(stock.router)
 
-# --- Endpoint Raíz ---
+# --- Root Endpoint ---
 @app.get("/", tags=["root"])
 def read_root():
     return {"status": "API is running"}
