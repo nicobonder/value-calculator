@@ -1,10 +1,9 @@
 
 import logging
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-# CORRECCIÓN FINAL: Usar importación relativa para los routers
-# Esto es crucial para que Python encuentre los módulos desde dentro del paquete 'api'
 from .routers import search, stock
 
 # --- Configuración del Logging ---
@@ -17,15 +16,32 @@ logging.basicConfig(
 app = FastAPI(
     title="Value Calculator API",
     description="API para la calculadora de valor de acciones, con endpoints para búsqueda y datos financieros.",
-    version="1.0.1", # Version bump
+    version="1.1.0", # Version bump
 )
+
+# --- MANEJADOR DE EXCEPCIONES GLOBAL (NUESTRA 'CAJA NEGRA') ---
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """
+    Este manejador captura cualquier excepción no controlada en la aplicación,
+    evitando los 500 genéricos y devolviendo siempre un JSON con el detalle del error.
+    """
+    logging.error(f"Unhandled exception for {request.method} {request.url}: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={
+            "message": "An unexpected internal server error occurred.",
+            "error_type": str(type(exc).__name__),
+            "error_details": str(exc)
+        },
+    )
 
 # --- Middleware de CORS ---
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://value-calculator-psi.vercel.app", # Dominio de producción
-        "http://localhost:5173", # Entorno de desarrollo local
+        "https://value-calculator-psi.vercel.app",
+        "http://localhost:5173",
         "http://localhost:3000",
     ],
     allow_credentials=True,
@@ -34,12 +50,11 @@ app.add_middleware(
 )
 
 # --- Inclusión de Routers ---
-# Vercel maneja el /api a través de las reescrituras en vercel.json
 app.include_router(search.router)
 app.include_router(stock.router)
 
-
-# --- Endpoint Raíz (Opcional) ---
+# --- Endpoint Raíz ---
 @app.get("/", tags=["root"])
 def read_root():
     return {"status": "API is running"}
+
