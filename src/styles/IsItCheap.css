@@ -32,13 +32,11 @@
   flex-direction: column;
 }
 
-/* --- LA CORRECCIÓN CLAVE --- */
-/* Anulamos el 'left: -300%' de App.css y ajustamos el ancho */
 .valuation-view .search-results {
   left: 0;
-  width: 100%; /* La lista ocupará todo el ancho de su padre */
+  width: 100%;
 }
-/* --- FIN DE LA CORRECCIÓN --- */
+
 
 .error-message {
   color: #ff6b6b;
@@ -92,13 +90,21 @@
   padding: 12px 15px;
   text-align: left;
   border-bottom: 1px solid #333;
-
 }
 
 .metrics-table thead th {
   background-color: var(--primary-green);
   font-weight: bold;
+}
+
+.metrics-table th:nth-child(n+2),
+.metrics-table td:nth-child(n+2) {
   text-align: center;
+}
+
+.metrics-table thead th:first-child,
+.metrics-table tbody td:first-child {
+  text-align: left;
 }
 
 .rating-cell {
