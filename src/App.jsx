@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Analytics } from "@vercel/analytics/react";
 import { Toaster } from 'react-hot-toast';
 import Navbar from './components/Navbar';
 import ExitMultiple from './pages/ExitMultiple';
@@ -25,6 +26,7 @@ function App() {
           <Route path="/is-it-cheap" element={<IsItCheap />} />
         </Routes>
         <Footer />
+        <Analytics />
       </div>
     </Router>
   );
