@@ -10,7 +10,7 @@ METRIC_THRESHOLDS = {
     "Price to Gross Profit (P/GP)": [(8, 5), (12, 3), (18, 1)],
     "Forward Price to Earnings (F P/E)": [(15, 5), (25, 3), (35, 1)],
     "Price to Earnings (P/E)": [(16, 5), (25, 3), (35, 1)],
-    "Forward Price to Free Cash Flow (F P/FCF)": [(15, 5), (25, 3), (40, 1)],
+    "Forward Price to FCF (F P/FCF)": [(15, 5), (25, 3), (40, 1)],
     "Price to Free Cash Flow (P/FCF)": [(12, 5), (18, 3), (30, 1)],
 }
 
@@ -23,6 +23,10 @@ SCORE_RATINGS = {
 
 def get_score_and_rating(metric_name, value):
     """Calculates the score and rating for a given metric and value."""
+    if metric_name not in METRIC_THRESHOLDS:
+        print(f"⚠️ Error: The metric '{metric_name}' doesnt exist in METRIC_THRESHOLDS")
+        return 0, "Unknown"
+
     if value is None or pd.isna(value) or value < 0:
         return 0, "N/A"
     
@@ -31,7 +35,7 @@ def get_score_and_rating(metric_name, value):
     for limit, score in thresholds:
         if value < limit:
             return score, SCORE_RATINGS.get(score, "N/A")
-            
+    # if the value is too High, return the lowest score and rating     
     return 0, SCORE_RATINGS[0]
 
 def _find_df_value(df, keys, index=0):
